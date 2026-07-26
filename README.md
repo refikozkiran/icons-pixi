@@ -73,7 +73,32 @@ src/
   temel oyun deneyimini bozmayacak şekilde daha sade tutuldu (ses efektleri
   ve titreşim geri bildirimi tam olarak korunuyor).
 
+## GitHub Pages'e yayınlama
+
+Bu repoda `.github/workflows/deploy.yml` hazır — `main` dalına her push'ta
+projeyi otomatik derleyip GitHub Pages'e yayınlar. Kurulum:
+
+1. Repo ayarlarında **Settings → Pages → Build and deployment → Source**
+   kısmından **"GitHub Actions"** seçeneğini seç (gh-pages branch değil).
+2. `main`'e bir commit gönder (veya Actions sekmesinden workflow'u elle tetikle).
+3. Birkaç dakika içinde site `https://<kullanıcı-adın>.github.io/icons-pixi/`
+   adresinde yayında olur.
+
+**Önemli:** `vite.config.js` içindeki `base: '/icons-pixi/'` değeri repo adınla
+birebir eşleşmeli. Repoyu farklı bir isimle oluşturduysan bu satırı
+`base: '/senin-repo-adin/'` olarak güncelle. Kendi custom domain'inde
+(`CNAME` ile) yayınlayacaksan `base: '/'` yap.
+
+Elle (Actions kullanmadan) yayınlamak istersen:
+```bash
+npm run build
+npx gh-pages -d dist
+```
+(bu yöntem için `Settings → Pages → Source`'u `gh-pages` branch olarak ayarlaman gerekir.)
+
 ## Oyun verileri
+
+
 
 `LEVELS`, `STORE_ICONS`, `ACHIEVEMENTS` ve ödül formülleri (sandık ağırlıkları,
 bölüm başına altın = `15 + yıldız×5`, günlük ödül = `10 🪙`) orijinal dosyadan
