@@ -155,14 +155,11 @@ export default function HomeScreen() {
       <Text text="◆  B U L M A C A  ◆" x={VW / 2} y={238} anchor={0.5} style={styles.sub} />
 
       {/* play button */}
-      <PillCTAButton
-        x={(VW - 360) / 2} y={272} width={360} height={62} radius={20}
-        topColor={0xffe38a} bottomColor={0xe6a93a} glowColor={0xffcb57}
+      <ChevronPlayButton
+        x={(VW - 380) / 2} y={270} width={380} height={72}
+        label="OYNA" sub={'Bölüm ' + (nextIdx + 1)}
         onTap={play}
-      >
-        <Text text={'▶  BÖLÜM ' + (nextIdx + 1)} x={180} y={22} anchor={0.5} style={styles.playLabel} />
-        <Text text={LEVELS[nextIdx].n + '×' + LEVELS[nextIdx].n + ' bulmaca'} x={180} y={44} anchor={0.5} style={styles.playSub} />
-      </PillCTAButton>
+      />
 
       {/* level progress card */}
       <Container x={16} y={350} interactive cursor="pointer" pointertap={() => { playTapSound(); goto('levels'); }}>
@@ -202,6 +199,95 @@ export default function HomeScreen() {
         <StatRow y={38} icon="✅" label="Tamamlanan" value={stats.completed + '/' + LEVELS.length} />
         <StatRow y={70} icon="⭐" label="Toplam Yıldız" value={String(stats.stars)} />
         <StatRow y={102} icon="⏱️" label="En İyi Süre" value={fmtTime(stats.best)} />
+      </Container>
+    </Container>
+  );
+}
+
+function hexPoints(cx, cy, w, h, n) {
+  const hw = w / 2, hh = h / 2;
+  return [
+    cx - hw + n, cy - hh,
+    cx + hw - n, cy - hh,
+    cx + hw, cy,
+    cx + hw - n, cy + hh,
+    cx - hw + n, cy + hh,
+    cx - hw, cy,
+  ];
+}
+
+function ChevronPlayButton({ x, y, width, height, label, sub, onTap }) {
+  const [pressed, setPressed] = useState(false);
+  const [hover, setHover] = useState(false);
+  const cx = width / 2, cy = height / 2;
+  const notch = height * 0.46;
+  const pressOffset = pressed ? 3 : 0;
+
+  const drawGlow = useCallback(g => {
+    g.clear();
+    for (let i = 5; i >= 1; i--) {
+      const pad = i * 3;
+      g.lineStyle(2, 0xffcb57, 0.035 * i * (hover ? 1.6 : 1));
+      g.drawPolygon(hexPoints(cx, cy, width + pad * 2, height + pad * 2, notch + pad));
+    }
+  }, [width, height, cx, cy, notch, hover]);
+
+  const drawShadow = useCallback(g => {
+    g.clear();
+    g.beginFill(0x000000, 0.35);
+    g.drawPolygon(hexPoints(cx, cy + 6, width, height, notch));
+    g.endFill();
+  }, [width, height, cx, cy, notch]);
+
+  const drawFace = useCallback(g => {
+    g.clear();
+    // dark navy gradient-ish face
+    g.beginFill(0x1a0f3d, 1);
+    g.drawPolygon(hexPoints(cx, cy, width, height, notch));
+    g.endFill();
+    g.beginFill(0x120a30, 0.55);
+    g.drawPolygon(hexPoints(cx, cy + height * 0.18, width * 0.98, height * 0.62, notch * 0.9));
+    g.endFill();
+    // inner gold border
+    g.lineStyle(2, 0xffcb57, 0.95);
+    g.drawPolygon(hexPoints(cx, cy, width - 4, height - 4, notch - 2));
+    // faint outer hairline
+    g.lineStyle(1, 0xffe9a8, 0.5);
+    g.drawPolygon(hexPoints(cx, cy, width, height, notch));
+  }, [width, height, cx, cy, notch]);
+
+  const drawPlayIcon = useCallback(g => {
+    g.clear();
+    g.beginFill(0xffcb57, 1);
+    g.drawPolygon([-7, -10, -7, 10, 10, 0]);
+    g.endFill();
+  }, []);
+
+  const styleOyna = useMemo(() => new TextStyle({
+    fontFamily: fontFamily(), fontSize: 27, fontWeight: '900', fill: 0xffcb57, letterSpacing: 2,
+  }), []);
+  const styleSub = useMemo(() => new TextStyle({
+    fontFamily: fontFamily(), fontSize: 15, fontWeight: '700', fill: 0xc9bdf0, letterSpacing: 1,
+  }), []);
+
+  return (
+    <Container
+      x={x} y={y}
+      interactive cursor="pointer"
+      pointerdown={() => setPressed(true)}
+      pointerup={() => setPressed(false)}
+      pointerupoutside={() => setPressed(false)}
+      pointerover={() => setHover(true)}
+      pointerout={() => { setHover(false); setPressed(false); }}
+      pointertap={() => { playTapSound(); onTap(); }}
+    >
+      <Graphics draw={drawGlow} />
+      <Graphics draw={drawShadow} />
+      <Container y={pressOffset}>
+        <Graphics draw={drawFace} />
+        <Graphics draw={drawPlayIcon} x={cx - width * 0.28} y={cy} />
+        <Text text={label} x={cx - width * 0.28 + 26} y={cy} anchor={{ x: 0, y: 0.5 }} style={styleOyna} />
+        <Text text={sub} x={cx + width * 0.20} y={cy} anchor={0.5} style={styleSub} />
       </Container>
     </Container>
   );
