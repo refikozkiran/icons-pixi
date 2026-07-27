@@ -19,9 +19,10 @@ export default function GameScreen() {
   const [hintMsg, setHintMsg] = useState('Tek dokunuş: ✕  ·  Çift dokunuş: İkon');
 
   useEffect(() => {
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [game.idx]);
+  }, [game.idx, game.startTime]);
 
   const styles = useMemo(() => ({
     lvl: new TextStyle({ fontFamily: fontFamily(), fontSize: 12.5, fontWeight: '700', fill: 0xa79fd6 }),
@@ -36,7 +37,7 @@ export default function GameScreen() {
 
   const n = game.n;
   const conflicts = computeConflicts(n, game.region, game.board);
-  const elapsed = game.finished ? game.elapsed : (now - game.startTime) / 1000;
+  const elapsed = game.finished ? game.elapsed : Math.max(0, (now - game.startTime) / 1000);
   const equippedDef = STORE_ICONS.find(s => s.id === progress.equippedIcon) || STORE_ICONS[0];
 
   const boardSize = VW - 40;
@@ -207,6 +208,9 @@ function ToolBtn({ x, y, width, icon, label, onTap, disabled, badge }) {
   const height = 48, radius = 16, rimH = 4;
   const faceH = height - rimH;
 
+  const topColor = disabled ? 0x3a3652 : 0x5b52a3;
+  const bottomColor = disabled ? 0x211f36 : 0x2a2455;
+
   const drawShadow = useCallback(g => {
     g.clear();
     if (disabled) return;
@@ -216,24 +220,25 @@ function ToolBtn({ x, y, width, icon, label, onTap, disabled, badge }) {
   }, [width, disabled]);
   const drawRim = useCallback(g => {
     g.clear();
-    g.beginFill(0x120e28, 1);
+    g.beginFill(disabled ? 0x17152a : 0x120e28, 1);
     g.drawRoundedRect(0, 0, width, height, radius);
     g.endFill();
-  }, [width]);
+  }, [width, disabled]);
   const drawBorder = useCallback(g => {
     g.clear();
-    g.lineStyle(1, 0x9a8fe6, 0.35);
+    g.lineStyle(1, 0x9a8fe6, disabled ? 0.16 : 0.35);
     g.drawRoundedRect(0.6, 0.6, width - 1.2, faceH - 1.2, radius - 1);
-  }, [width, faceH]);
+  }, [width, faceH, disabled]);
 
-  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor: 0x5b52a3, bottomColor: 0x2a2455 });
+  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor, bottomColor });
   const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 17 });
-  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: 0xe4dffa });
+  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: disabled ? 0x8b84ad : 0xe4dffa });
   const badgeStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9, fontWeight: '800', fill: 0x2a1000 });
+  const badgeW = Math.max(22, (String(badge).length * 6.5) + 14);
 
   return (
     <Container
-      x={x} y={y} interactive={!disabled} cursor={disabled ? 'default' : 'pointer'} alpha={disabled ? 0.35 : 1}
+      x={x} y={y} interactive={!disabled} cursor={disabled ? 'default' : 'pointer'} alpha={disabled ? 0.7 : 1}
       pointerdown={() => !disabled && setPressed(true)}
       pointerup={() => setPressed(false)}
       pointerupoutside={() => setPressed(false)}
@@ -244,12 +249,21 @@ function ToolBtn({ x, y, width, icon, label, onTap, disabled, badge }) {
       <Container y={pressed && !disabled ? rimH : 0}>
         <Sprite texture={faceTexture} x={0} y={0} width={width} height={faceH} />
         <Graphics draw={drawBorder} />
-        <Text text={icon} x={width / 2} y={16} anchor={0.5} style={iconStyle} />
+        <Text text={icon} x={width / 2} y={16} anchor={0.5} style={iconStyle} alpha={disabled ? 0.55 : 1} />
         <Text text={label} x={width / 2} y={36} anchor={0.5} style={lblStyle} />
       </Container>
       {badge && (
-        <Container x={width - 6} y={2}>
-          <Graphics draw={g => { g.clear(); g.beginFill(0x000000, 0.3); g.drawRoundedRect(-14, 1, 28, 15, 7); g.endFill(); g.beginFill(0xffcb57); g.lineStyle(1, 0xfff2c4, 0.7); g.drawRoundedRect(-14, 0, 28, 15, 7); g.endFill(); }} />
+        <Container x={width - 12 - badgeW / 2} y={9}>
+          <Graphics draw={g => {
+            g.clear();
+            g.beginFill(0x000000, 0.25);
+            g.drawRoundedRect(-badgeW / 2, 1, badgeW, 15, 7.5);
+            g.endFill();
+            g.beginFill(0xffcb57);
+            g.lineStyle(1, 0xfff2c4, 0.7);
+            g.drawRoundedRect(-badgeW / 2, 0, badgeW, 15, 7.5);
+            g.endFill();
+          }} />
           <Text text={badge} x={0} y={7} anchor={0.5} style={badgeStyle} />
         </Container>
       )}
