@@ -69,7 +69,7 @@ function DockButton({ x, width, height, active, icon, label, showBadge, onTap })
   }, [active, pillW, pillH]);
 
   const faceTexture = active
-    ? getButtonFaceTexture({ width: pillW, height: pillH, radius, topColor: 0x8f7fff, bottomColor: 0x5c48c9, gloss: true })
+    ? getButtonFaceTexture({ width: pillW, height: pillH, radius, topColor: 0xa79bff, bottomColor: 0x5b52a3, gloss: true })
     : null;
 
   const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 19 });

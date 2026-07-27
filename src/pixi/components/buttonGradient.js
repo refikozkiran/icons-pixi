@@ -24,7 +24,8 @@ function roundedRectPath(ctx, w, h, r) {
 
 /**
  * Dikey linear-gradient dolgulu, köşeleri yuvarlatılmış bir buton yüzeyi dokusu üretir.
- * topColor -> bottomColor arası yumuşak geçiş; isteğe bağlı üstte parlak "gloss" şeridi.
+ * topColor -> bottomColor arası yumuşak geçiş, üstte belirgin bir "cam" parlaklık şeridi
+ * ve en üstte ince, parlak bir highlight çizgisi (glass-edge) içerir.
  */
 export function getButtonFaceTexture({ width, height, radius, topColor, bottomColor, gloss = true }) {
   const w = Math.max(1, Math.round(width));
@@ -40,6 +41,7 @@ export function getButtonFaceTexture({ width, height, radius, topColor, bottomCo
   roundedRectPath(ctx, w, h, radius);
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, toCss(topColor));
+  grad.addColorStop(0.55, toCss(bottomColor, 1));
   grad.addColorStop(1, toCss(bottomColor));
   ctx.fillStyle = grad;
   ctx.fill();
@@ -48,11 +50,18 @@ export function getButtonFaceTexture({ width, height, radius, topColor, bottomCo
     ctx.save();
     roundedRectPath(ctx, w, h, radius);
     ctx.clip();
-    const glossGrad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
-    glossGrad.addColorStop(0, 'rgba(255,255,255,0.32)');
+
+    // Geniş, yumuşak cam parlaklığı
+    const glossGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+    glossGrad.addColorStop(0, 'rgba(255,255,255,0.38)');
     glossGrad.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = glossGrad;
-    ctx.fillRect(0, 0, w, h * 0.55);
+    ctx.fillRect(0, 0, w, h * 0.6);
+
+    // İnce, keskin üst kenar çizgisi (cam kenarı hissi)
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillRect(0, 0, w, Math.max(1, h * 0.045));
+
     ctx.restore();
   }
 
