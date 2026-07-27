@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Container, Graphics, Text } from '@pixi/react';
+import { Container, Graphics, Sprite, Text } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
 import { fontFamily, VW, REGION_COLORS } from '../theme.js';
 import { useGame } from '../../state/gameStore.js';
@@ -9,6 +9,7 @@ import { STORE_ICONS } from '../../data/storeIcons.js';
 import { computeConflicts, checkWin, fmtTime } from '../../game/queensLogic.js';
 import { checkAchievements } from '../../game/achievementLogic.js';
 import { playVictoryChime, playTapSound, vibrate } from '../../audio/sfx.js';
+import { getButtonFaceTexture } from '../components/buttonGradient.js';
 
 export default function GameScreen() {
   const game = useGame();
@@ -157,43 +158,98 @@ export default function GameScreen() {
 }
 
 function HeaderBtn({ x, y, icon, onTap }) {
-  const draw = useCallback(g => {
+  const [pressed, setPressed] = useState(false);
+  const size = 40, radius = 13, rimH = 4;
+  const faceH = size - rimH;
+
+  const drawShadow = useCallback(g => {
     g.clear();
-    g.beginFill(0xffffff, 0.06);
-    g.lineStyle(1, 0x332a5c, 1);
-    g.drawRoundedRect(0, 0, 40, 40, 12);
+    g.beginFill(0x000000, 0.25);
+    g.drawRoundedRect(0, 3, size, size, radius);
     g.endFill();
   }, []);
+  const drawRim = useCallback(g => {
+    g.clear();
+    g.beginFill(0x100c24, 1);
+    g.drawRoundedRect(0, 0, size, size, radius);
+    g.endFill();
+  }, []);
+  const drawBorder = useCallback(g => {
+    g.clear();
+    g.lineStyle(1, 0x6a5cc7, 0.4);
+    g.drawRoundedRect(0.6, 0.6, size - 1.2, faceH - 1.2, radius - 1);
+  }, [faceH]);
+
+  const faceTexture = getButtonFaceTexture({ width: size, height: faceH, radius, topColor: 0x3a3466, bottomColor: 0x201a3f });
   const style = new TextStyle({ fontFamily: fontFamily(), fontSize: 17, fill: 0xeae6ff });
+
   return (
-    <Container x={x} y={y} interactive cursor="pointer" pointertap={() => { playTapSound(); onTap(); }}>
-      <Graphics draw={draw} />
-      <Text text={icon} x={20} y={20} anchor={0.5} style={style} />
+    <Container
+      x={x} y={y} interactive cursor="pointer"
+      pointerdown={() => setPressed(true)}
+      pointerup={() => setPressed(false)}
+      pointerupoutside={() => setPressed(false)}
+      pointertap={() => { playTapSound(); onTap(); }}
+    >
+      <Graphics draw={drawShadow} />
+      <Graphics draw={drawRim} />
+      <Container y={pressed ? rimH : 0}>
+        <Sprite texture={faceTexture} x={0} y={0} width={size} height={faceH} />
+        <Graphics draw={drawBorder} />
+        <Text text={icon} x={size / 2} y={faceH / 2} anchor={0.5} style={style} />
+      </Container>
     </Container>
   );
 }
 
 function ToolBtn({ x, y, width, icon, label, onTap, disabled, badge }) {
-  const height = 48;
-  const draw = useCallback(g => {
+  const [pressed, setPressed] = useState(false);
+  const height = 48, radius = 16, rimH = 4;
+  const faceH = height - rimH;
+
+  const drawShadow = useCallback(g => {
     g.clear();
-    g.beginFill(0xffffff, 0.06);
-    g.lineStyle(1, 0xffffff, 0.08);
-    g.drawRoundedRect(0, 0, width, height, 16);
+    if (disabled) return;
+    g.beginFill(0x000000, 0.22);
+    g.drawRoundedRect(0, 3, width, height, radius);
+    g.endFill();
+  }, [width, disabled]);
+  const drawRim = useCallback(g => {
+    g.clear();
+    g.beginFill(0x120e28, 1);
+    g.drawRoundedRect(0, 0, width, height, radius);
     g.endFill();
   }, [width]);
+  const drawBorder = useCallback(g => {
+    g.clear();
+    g.lineStyle(1, 0x6a5cc7, 0.35);
+    g.drawRoundedRect(0.6, 0.6, width - 1.2, faceH - 1.2, radius - 1);
+  }, [width, faceH]);
+
+  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor: 0x362f5c, bottomColor: 0x1c1836 });
   const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 17 });
-  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: 0xa79fd6 });
+  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: 0xc7c0ef });
   const badgeStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9, fontWeight: '800', fill: 0x2a1000 });
+
   return (
-    <Container x={x} y={y} interactive={!disabled} cursor={disabled ? 'default' : 'pointer'} alpha={disabled ? 0.35 : 1}
-      pointertap={() => { if (!disabled) { playTapSound(); onTap(); } }}>
-      <Graphics draw={draw} />
-      <Text text={icon} x={width / 2} y={16} anchor={0.5} style={iconStyle} />
-      <Text text={label} x={width / 2} y={36} anchor={0.5} style={lblStyle} />
+    <Container
+      x={x} y={y} interactive={!disabled} cursor={disabled ? 'default' : 'pointer'} alpha={disabled ? 0.35 : 1}
+      pointerdown={() => !disabled && setPressed(true)}
+      pointerup={() => setPressed(false)}
+      pointerupoutside={() => setPressed(false)}
+      pointertap={() => { if (!disabled) { playTapSound(); onTap(); } }}
+    >
+      <Graphics draw={drawShadow} />
+      <Graphics draw={drawRim} />
+      <Container y={pressed && !disabled ? rimH : 0}>
+        <Sprite texture={faceTexture} x={0} y={0} width={width} height={faceH} />
+        <Graphics draw={drawBorder} />
+        <Text text={icon} x={width / 2} y={16} anchor={0.5} style={iconStyle} />
+        <Text text={label} x={width / 2} y={36} anchor={0.5} style={lblStyle} />
+      </Container>
       {badge && (
         <Container x={width - 6} y={2}>
-          <Graphics draw={g => { g.clear(); g.beginFill(0xffcb57); g.drawRoundedRect(-14, 0, 28, 15, 7); g.endFill(); }} />
+          <Graphics draw={g => { g.clear(); g.beginFill(0x000000, 0.3); g.drawRoundedRect(-14, 1, 28, 15, 7); g.endFill(); g.beginFill(0xffcb57); g.lineStyle(1, 0xfff2c4, 0.7); g.drawRoundedRect(-14, 0, 28, 15, 7); g.endFill(); }} />
           <Text text={badge} x={0} y={7} anchor={0.5} style={badgeStyle} />
         </Container>
       )}

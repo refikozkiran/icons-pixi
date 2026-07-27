@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Container, Graphics, Text } from '@pixi/react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Container, Graphics, Sprite, Text } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
 import { fontFamily, VW, COLORS } from '../theme.js';
 import { useProgress } from '../../state/progressStore.js';
@@ -9,6 +9,7 @@ import { LEVELS } from '../../data/levels.js';
 import { STORE_ICONS } from '../../data/storeIcons.js';
 import { fmtTime } from '../../game/queensLogic.js';
 import { playCoinChime, playTapSound, vibrate } from '../../audio/sfx.js';
+import { getButtonFaceTexture } from '../components/buttonGradient.js';
 
 const TILES = [
   { ch: 'I', c1: 0xffb08a, c2: 0xff5d7a },
@@ -77,22 +78,6 @@ export default function HomeScreen() {
     g.endFill();
   }, [overallPct]);
 
-  const drawDailyBtn = useCallback(g => {
-    g.clear();
-    g.beginFill(0x8b7cff, 0.14);
-    g.lineStyle(1, 0x8b7cff, 0.4);
-    g.drawRoundedRect(0, 0, 408, 46, 14);
-    g.endFill();
-  }, []);
-
-  const drawPlayBtn = useCallback(g => {
-    g.clear();
-    g.beginFill(0x1e0f37, 0.9);
-    g.lineStyle(1.5, 0xffcb57, 0.6);
-    g.drawRoundedRect(0, 0, 360, 62, 20);
-    g.endFill();
-  }, []);
-
   const drawLevelCard = useCallback(g => {
     g.clear();
     g.beginFill(0xffffff, 0.045);
@@ -126,8 +111,8 @@ export default function HomeScreen() {
     coin: new TextStyle({ fontFamily: fontFamily(), fontSize: 22 }),
     small: new TextStyle({ fontFamily: fontFamily(), fontSize: 11, fontWeight: '700', fill: 0xeae6ff }),
     sub: new TextStyle({ fontFamily: fontFamily(), fontSize: 10, letterSpacing: 4, fill: 0xa79fd6, fontWeight: '600' }),
-    playLabel: new TextStyle({ fontFamily: fontFamily(), fontSize: 20, fontWeight: '800', fill: 0xffcb57, letterSpacing: 1 }),
-    playSub: new TextStyle({ fontFamily: fontFamily(), fontSize: 11, fill: 0xa79fd6, fontWeight: '600' }),
+    playLabel: new TextStyle({ fontFamily: fontFamily(), fontSize: 20, fontWeight: '800', fill: 0x2a1a04, letterSpacing: 1 }),
+    playSub: new TextStyle({ fontFamily: fontFamily(), fontSize: 11, fill: 0x5a4318, fontWeight: '700' }),
     cardTitle: new TextStyle({ fontFamily: fontFamily(), fontSize: 11.5, fontWeight: '800', fill: 0xeae6ff, letterSpacing: 1 }),
     cardPct: new TextStyle({ fontFamily: fontFamily(), fontSize: 12.5, fontWeight: '800', fill: 0xffcb57 }),
     cardNext: new TextStyle({ fontFamily: fontFamily(), fontSize: 10.5, fill: 0xa79fd6, fontWeight: '600' }),
@@ -154,11 +139,14 @@ export default function HomeScreen() {
       <CurrencyBadge x={264} y={52} width={160} height={28} icon="🌟" value={progress.luckyStars} color={0x8b7cff} onTap={() => goto('store')} />
 
       {/* daily gift */}
-      <Container x={16} y={96} interactive cursor="pointer" pointertap={claimDaily}>
-        <Graphics draw={drawDailyBtn} />
+      <PillCTAButton
+        x={16} y={96} width={408} height={46} radius={14}
+        topColor={0xa393ff} bottomColor={0x6a52d6} glowColor={dailyClaimed ? null : 0x8b7cff}
+        onTap={claimDaily}
+      >
         <Text text={dailyClaimed ? '✅' : '🎁'} x={26} y={23} anchor={0.5} style={styles.coin} />
         <Text text={dailyClaimed ? 'Günlük ödül alındı — yarın tekrar gel' : 'Günlük Ödülünü Al  ·  +10 🪙'} x={50} y={23} anchor={{ x: 0, y: 0.5 }} style={styles.dailyText} />
-      </Container>
+      </PillCTAButton>
 
       {/* wordmark */}
       <Container x={VW / 2 - (5 * 54 + 4 * 8) / 2} y={158}>
@@ -167,11 +155,14 @@ export default function HomeScreen() {
       <Text text="◆  B U L M A C A  ◆" x={VW / 2} y={238} anchor={0.5} style={styles.sub} />
 
       {/* play button */}
-      <Container x={(VW - 360) / 2} y={272} interactive cursor="pointer" pointertap={play}>
-        <Graphics draw={drawPlayBtn} />
-        <Text text={'▶  BÖLÜM ' + (nextIdx + 1)} x={180} y={24} anchor={0.5} style={styles.playLabel} />
-        <Text text={LEVELS[nextIdx].n + '×' + LEVELS[nextIdx].n + ' bulmaca'} x={180} y={46} anchor={0.5} style={styles.playSub} />
-      </Container>
+      <PillCTAButton
+        x={(VW - 360) / 2} y={272} width={360} height={62} radius={20}
+        topColor={0xffe38a} bottomColor={0xe6a93a} glowColor={0xffcb57}
+        onTap={play}
+      >
+        <Text text={'▶  BÖLÜM ' + (nextIdx + 1)} x={180} y={22} anchor={0.5} style={styles.playLabel} />
+        <Text text={LEVELS[nextIdx].n + '×' + LEVELS[nextIdx].n + ' bulmaca'} x={180} y={44} anchor={0.5} style={styles.playSub} />
+      </PillCTAButton>
 
       {/* level progress card */}
       <Container x={16} y={350} interactive cursor="pointer" pointertap={() => { playTapSound(); goto('levels'); }}>
@@ -214,6 +205,68 @@ export default function HomeScreen() {
       </Container>
     </Container>
   );
+}
+
+function PillCTAButton({ x, y, width, height, radius, topColor, bottomColor, glowColor, onTap, children }) {
+  const [pressed, setPressed] = useState(false);
+  const [hover, setHover] = useState(false);
+  const rimH = Math.max(3, Math.round(height * 0.1));
+  const faceH = height - rimH;
+  const rimColor = mixDarken(bottomColor, 0.32);
+
+  const drawShadow = useCallback(g => {
+    g.clear();
+    g.beginFill(0x000000, 0.3);
+    g.drawRoundedRect(0, 5, width, height, radius);
+    g.endFill();
+  }, [width, height, radius]);
+
+  const drawGlow = useCallback(g => {
+    g.clear();
+    if (!glowColor) return;
+    for (let i = 3; i >= 1; i--) {
+      g.beginFill(glowColor, 0.045 * i * (hover ? 1.7 : 1));
+      g.drawRoundedRect(-i * 2, -i * 2, width + i * 4, height + i * 4, radius + i * 2);
+      g.endFill();
+    }
+  }, [width, height, radius, glowColor, hover]);
+
+  const drawRim = useCallback(g => {
+    g.clear();
+    g.beginFill(rimColor, 1);
+    g.drawRoundedRect(0, 0, width, height, radius);
+    g.endFill();
+  }, [width, height, radius, rimColor]);
+
+  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor, bottomColor });
+
+  return (
+    <Container
+      x={x} y={y}
+      interactive cursor="pointer"
+      pointerdown={() => setPressed(true)}
+      pointerup={() => setPressed(false)}
+      pointerupoutside={() => setPressed(false)}
+      pointerover={() => setHover(true)}
+      pointerout={() => { setHover(false); setPressed(false); }}
+      pointertap={() => { playTapSound(); onTap(); }}
+    >
+      <Graphics draw={drawShadow} />
+      <Graphics draw={drawGlow} />
+      <Graphics draw={drawRim} />
+      <Container y={pressed ? rimH : 0}>
+        <Sprite texture={faceTexture} x={0} y={0} width={width} height={faceH} />
+        {children}
+      </Container>
+    </Container>
+  );
+}
+
+function mixDarken(hex, amount) {
+  const r = Math.round(((hex >> 16) & 0xff) * (1 - amount));
+  const g = Math.round(((hex >> 8) & 0xff) * (1 - amount));
+  const b = Math.round((hex & 0xff) * (1 - amount));
+  return (r << 16) | (g << 8) | b;
 }
 
 function LogoTile({ x, data }) {
