@@ -156,7 +156,7 @@ export default function HomeScreen() {
 
       {/* play button */}
       <ChevronPlayButton
-        x={(VW - 380) / 2} y={270} width={380} height={72}
+        x={(VW - 380) / 2} y={272} width={380} height={64}
         label="OYNA" sub={'Bölüm ' + (nextIdx + 1)}
         onTap={play}
       />
@@ -225,9 +225,9 @@ function ChevronPlayButton({ x, y, width, height, label, sub, onTap }) {
 
   const drawGlow = useCallback(g => {
     g.clear();
-    for (let i = 5; i >= 1; i--) {
-      const pad = i * 3;
-      g.lineStyle(2, 0xffcb57, 0.035 * i * (hover ? 1.6 : 1));
+    for (let i = 3; i >= 1; i--) {
+      const pad = i * 2;
+      g.lineStyle(2, 0xffcb57, 0.05 * i * (hover ? 1.6 : 1));
       g.drawPolygon(hexPoints(cx, cy, width + pad * 2, height + pad * 2, notch + pad));
     }
   }, [width, height, cx, cy, notch, hover]);

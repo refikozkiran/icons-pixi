@@ -8,6 +8,7 @@ import { STORE_ICONS } from '../../data/storeIcons.js';
 import { useProgress, HINT_STAR_COST } from '../../state/progressStore.js';
 import { useUI } from '../../state/uiStore.js';
 import { playCoinChime, playTapSound } from '../../audio/sfx.js';
+import { dragGuard } from '../interactionGuard.js';
 
 const COLS = 3;
 const GAP = 10;
@@ -156,7 +157,11 @@ function IconCard({ x, y, width, def, owned, equipped, affordable, onTap }) {
   const stateStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9, fontWeight: '800', fill: 0x4be3a3 });
 
   return (
-    <Container x={x} y={y} interactive cursor="pointer" pointertap={onTap} alpha={!owned && !affordable ? 0.55 : 1}>
+    <Container
+      x={x} y={y} interactive cursor="pointer"
+      pointertap={() => { if (dragGuard.active) return; playTapSound(); onTap(); }}
+      alpha={!owned && !affordable ? 0.55 : 1}
+    >
       <Graphics draw={draw} />
       <Text text={def.icon} x={width / 2} y={34} anchor={0.5} style={iconStyle} />
       <Text text={def.name} x={width / 2} y={62} anchor={{ x: 0.5, y: 0 }} style={nameStyle} />

@@ -10,6 +10,7 @@ import { useUI } from '../../state/uiStore.js';
 import { useGame } from '../../state/gameStore.js';
 import { fmtTime } from '../../game/queensLogic.js';
 import { playTapSound } from '../../audio/sfx.js';
+import { dragGuard } from '../interactionGuard.js';
 
 const ROW_H = 68;
 const GAP = 10;
@@ -76,7 +77,7 @@ function LevelRow({ y, width, idx, lvl, unlocked, data, onTap }) {
   const emptyStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 11, fill: 0xa79fd6, fontWeight: '600' });
 
   return (
-    <Container y={y} interactive={unlocked} cursor={unlocked ? 'pointer' : 'default'} pointertap={() => { if (unlocked) { playTapSound(); onTap(); } }}>
+    <Container y={y} interactive={unlocked} cursor={unlocked ? 'pointer' : 'default'} pointertap={() => { if (unlocked && !dragGuard.active) { playTapSound(); onTap(); } }}>
       <Graphics draw={draw} />
       <Graphics draw={drawBadge} x={12} y={12} />
       <Text text={String(idx + 1)} x={34} y={34} anchor={0.5} style={badgeStyle} />
