@@ -176,11 +176,11 @@ function HeaderBtn({ x, y, icon, onTap }) {
   }, []);
   const drawBorder = useCallback(g => {
     g.clear();
-    g.lineStyle(1, 0x6a5cc7, 0.4);
+    g.lineStyle(1, 0x9a8fe6, 0.4);
     g.drawRoundedRect(0.6, 0.6, size - 1.2, faceH - 1.2, radius - 1);
   }, [faceH]);
 
-  const faceTexture = getButtonFaceTexture({ width: size, height: faceH, radius, topColor: 0x3a3466, bottomColor: 0x201a3f });
+  const faceTexture = getButtonFaceTexture({ width: size, height: faceH, radius, topColor: 0x5b52a3, bottomColor: 0x2a2455 });
   const style = new TextStyle({ fontFamily: fontFamily(), fontSize: 17, fill: 0xeae6ff });
 
   return (
@@ -222,13 +222,13 @@ function ToolBtn({ x, y, width, icon, label, onTap, disabled, badge }) {
   }, [width]);
   const drawBorder = useCallback(g => {
     g.clear();
-    g.lineStyle(1, 0x6a5cc7, 0.35);
+    g.lineStyle(1, 0x9a8fe6, 0.35);
     g.drawRoundedRect(0.6, 0.6, width - 1.2, faceH - 1.2, radius - 1);
   }, [width, faceH]);
 
-  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor: 0x362f5c, bottomColor: 0x1c1836 });
+  const faceTexture = getButtonFaceTexture({ width, height: faceH, radius, topColor: 0x5b52a3, bottomColor: 0x2a2455 });
   const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 17 });
-  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: 0xc7c0ef });
+  const lblStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 10, fontWeight: '700', fill: 0xe4dffa });
   const badgeStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9, fontWeight: '800', fill: 0x2a1000 });
 
   return (
