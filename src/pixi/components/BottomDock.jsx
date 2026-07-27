@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
-import { Container, Graphics, Text } from '@pixi/react';
+import React, { useCallback, useState } from 'react';
+import { Container, Graphics, Sprite, Text } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
 import { fontFamily, VW } from '../theme.js';
 import { useUI } from '../../state/uiStore.js';
 import { useProgress } from '../../state/progressStore.js';
 import { playTapSound } from '../../audio/sfx.js';
+import { getButtonFaceTexture } from './buttonGradient.js';
 
 const ITEMS = [
   { id: 'home', icon: '🏠', label: 'Ana Sayfa' },
@@ -25,11 +26,13 @@ export default function BottomDock() {
 
   const drawBg = useCallback(g => {
     g.clear();
-    g.beginFill(0x0a071a, 0.92);
+    g.beginFill(0x0a071a, 0.94);
     g.drawRect(0, 0, VW, h);
     g.endFill();
     g.lineStyle(1, 0x332a5c, 0.6);
     g.moveTo(0, 0); g.lineTo(VW, 0);
+    g.lineStyle(1, 0x8b7cff, 0.15);
+    g.moveTo(0, 0.6); g.lineTo(VW, 0.6);
   }, []);
 
   return (
@@ -50,30 +53,53 @@ export default function BottomDock() {
 }
 
 function DockButton({ x, width, height, active, icon, label, showBadge, onTap }) {
-  const drawBg = useCallback(g => {
+  const [pressed, setPressed] = useState(false);
+  const pillW = width - 12;
+  const pillH = height - 24;
+  const radius = 14;
+
+  const drawGlow = useCallback(g => {
     g.clear();
-    if (active) {
-      g.beginFill(0x8b7cff, 0.16);
-      g.lineStyle(1, 0x8b7cff, 0.4);
-      g.drawRoundedRect(6, 8, width - 12, height - 24, 14);
+    if (!active) return;
+    for (let i = 2; i >= 1; i--) {
+      g.beginFill(0x8b7cff, 0.09 * i);
+      g.drawRoundedRect(6 - i * 2, 8 - i * 2, pillW + i * 4, pillH + i * 4, radius + i * 2);
       g.endFill();
     }
-  }, [active, width, height]);
+  }, [active, pillW, pillH]);
+
+  const faceTexture = active
+    ? getButtonFaceTexture({ width: pillW, height: pillH, radius, topColor: 0x8f7fff, bottomColor: 0x5c48c9, gloss: true })
+    : null;
 
   const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 19 });
-  const labelStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9.5, fontWeight: '700', fill: active ? 0xeae6ff : 0xa79fd6 });
+  const labelStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: 9.5, fontWeight: '700', fill: active ? 0xffffff : 0xa79fd6 });
 
   return (
     <Container
       x={x} y={0} interactive cursor="pointer"
+      pointerdown={() => setPressed(true)}
+      pointerup={() => setPressed(false)}
+      pointerupoutside={() => setPressed(false)}
       pointertap={() => { playTapSound(); onTap(); }}
+      scale={pressed ? 0.94 : 1}
     >
-      <Graphics draw={drawBg} />
+      <Graphics draw={drawGlow} />
+      {active && <Sprite texture={faceTexture} x={6} y={8} width={pillW} height={pillH} />}
       <Text text={icon} x={width / 2} y={height / 2 - 9} anchor={0.5} style={iconStyle} />
       <Text text={label} x={width / 2} y={height / 2 + 14} anchor={0.5} style={labelStyle} />
       {showBadge && (
         <Graphics
-          draw={g => { g.clear(); g.beginFill(0xff5d7a); g.drawCircle(0, 0, 4.5); g.endFill(); }}
+          draw={g => {
+            g.clear();
+            g.beginFill(0x000000, 0.35);
+            g.drawCircle(0.6, 0.6, 5.5);
+            g.endFill();
+            g.beginFill(0xff5d7a);
+            g.lineStyle(1, 0xffb3c0, 0.8);
+            g.drawCircle(0, 0, 4.5);
+            g.endFill();
+          }}
           x={width / 2 + 12} y={height / 2 - 17}
         />
       )}
