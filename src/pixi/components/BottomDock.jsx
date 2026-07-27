@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Container, Graphics, Sprite, Text } from '@pixi/react';
-import { TextStyle } from 'pixi.js';
+import { TextStyle, Rectangle } from 'pixi.js';
 import { fontFamily, VW } from '../theme.js';
 import { useUI } from '../../state/uiStore.js';
 import { useProgress } from '../../state/progressStore.js';
@@ -57,6 +57,11 @@ function DockButton({ x, width, height, active, icon, label, showBadge, onTap })
   const pillW = width - 12;
   const pillH = height - 24;
   const radius = 14;
+  // Aktif değilken parıltı grafiği boş çiziliyor ve sprite hiç render edilmiyor;
+  // bu yüzden Pixi'nin otomatik hesapladığı hit alanı yalnızca ikon/metin
+  // metinlerinin küçük sınırlarına daralıyordu (bazen dokunma algılanmıyordu).
+  // Sabit, tüm buton alanını kaplayan bir hitArea vererek bunu garanti altına alıyoruz.
+  const hitArea = useMemo(() => new Rectangle(0, 0, width, height), [width, height]);
 
   const drawGlow = useCallback(g => {
     g.clear();
@@ -78,6 +83,7 @@ function DockButton({ x, width, height, active, icon, label, showBadge, onTap })
   return (
     <Container
       x={x} y={0} interactive cursor="pointer"
+      hitArea={hitArea}
       pointerdown={() => setPressed(true)}
       pointerup={() => setPressed(false)}
       pointerupoutside={() => setPressed(false)}

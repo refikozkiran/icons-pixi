@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Container, Graphics } from '@pixi/react';
 import { Rectangle } from 'pixi.js';
+import { dragGuard } from '../interactionGuard.js';
 
 /**
  * Dikey sürükle-kaydır alanı. Listeler (seviyeler, mağaza, başarımlar) için kullanılır.
@@ -31,11 +32,23 @@ export default function ScrollArea({ x = 0, y = 0, width, height, contentHeight,
     if (!dragging.current) return;
     const localY = e.currentTarget.toLocal(e.global).y;
     const dy = localY - startY.current;
-    if (Math.abs(dy) > 4) moved.current = true;
+    if (Math.abs(dy) > 4) {
+      moved.current = true;
+      dragGuard.active = true; // sürükleme başladı: alttaki kartların tap'ini bastır
+    }
     setOffset(clamp(startOffset.current + dy));
   }, [maxOffset]);
 
-  const endDrag = useCallback(() => { dragging.current = false; }, []);
+  const endDrag = useCallback(() => {
+    dragging.current = false;
+    if (moved.current) {
+      // Bırakma anındaki tıklama/tap olayının bastırılmasını garantilemek için
+      // bayrağı bu jestin olay işleme turu tamamen bittikten sonra kapat.
+      setTimeout(() => { dragGuard.active = false; }, 60);
+    } else {
+      dragGuard.active = false;
+    }
+  }, []);
 
   const drawMask = useCallback(g => {
     g.clear();
