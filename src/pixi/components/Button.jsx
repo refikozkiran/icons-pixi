@@ -81,6 +81,7 @@ export default function Btn({
     : null;
 
   const style = new TextStyle({ fontFamily: fontFamily(), fontSize, fontWeight: '800', fill: v.text, letterSpacing: 0.3 });
+  const iconStyle = new TextStyle({ fontFamily: fontFamily(), fontSize: fontSize + 3 });
 
   return (
     <Container
@@ -102,12 +103,14 @@ export default function Btn({
         {faceTexture && <Sprite texture={faceTexture} x={0} y={0} width={width} height={faceH} />}
         <Graphics draw={drawGhostFace} />
         <Graphics draw={drawBorder} />
-        <Text
-          text={(icon ? icon + '  ' : '') + label}
-          x={width / 2} y={faceH / 2}
-          anchor={0.5}
-          style={style}
-        />
+        {icon ? (
+          <>
+            <Text text={icon} x={26} y={faceH / 2} anchor={0.5} style={iconStyle} />
+            <Text text={label} x={52} y={faceH / 2} anchor={{ x: 0, y: 0.5 }} style={style} />
+          </>
+        ) : (
+          <Text text={label} x={width / 2} y={faceH / 2} anchor={0.5} style={style} />
+        )}
       </Container>
     </Container>
   );
